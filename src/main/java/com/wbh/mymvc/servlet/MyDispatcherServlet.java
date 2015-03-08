@@ -113,14 +113,16 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private void mapMethod() {
 
 		Method[] ms = null;
+		String rm = null;
 		for (Class<?> c : ca) {
 			ms = c.getMethods();
 			String mappingUrl = "";
 			for (Method m : ms) {
 				if (m.isAnnotationPresent(MyRequestMapping.class)) {
 					mappingUrl = appName+ m.getAnnotation(MyRequestMapping.class).value().trim();
+					rm = m.getAnnotation(MyRequestMapping.class).method().trim().toUpperCase();
 					logger.info("映射url:" + mappingUrl);
-					hs.put(mappingUrl, new Handler(c, m));
+					hs.put(mappingUrl+rm, new Handler(c, m, rm));//直接拼接字符串当key，以后再优化
 				}
 			}
 		}
@@ -135,11 +137,17 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private void doService(HttpServletRequest req, HttpServletResponse resp) {
 	
 		Handler h = getHandler(req, resp);
+		MyModelAndView mv = null;
 		
-		MyModelAndView mv = invokeMappedMethod(h, req, resp);
+		//未匹配可以自定义异常，先放这里
+		if(null != h){
+			mv = invokeMappedMethod(h, req, resp);
+			
+		}
 		
-		loadView(mv, req, resp);
-		
+		if((null != mv)&&(!("").equals(mv.getView()))){
+			loadView(mv, req, resp);
+		}
 	}
 	
 	/**
@@ -150,7 +158,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 */
 	private Handler getHandler(HttpServletRequest req, HttpServletResponse resp){
 		String url = req.getRequestURI();
-		return hs.get(url);
+		return hs.get(url+req.getMethod().trim().toUpperCase());
 	}
 	
 	/**

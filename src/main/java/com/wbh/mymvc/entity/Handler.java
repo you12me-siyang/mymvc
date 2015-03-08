@@ -2,14 +2,17 @@ package com.wbh.mymvc.entity;
 
 import java.lang.reflect.Method;
 
+
 public class Handler {
 	
 	private Class<?> controllerClass;
 	private Method mappingMethod;
+	private String requestMethod;
 	
-	public Handler(Class<?> controllerClass,Method mappingMethod) {
+	public Handler(Class<?> controllerClass,Method mappingMethod,String requestMethod) {
 		this.controllerClass = controllerClass;
 		this.mappingMethod = mappingMethod;
+		this.requestMethod = requestMethod;
 	}
 	
 	public Class<?> getControllerClass() {
@@ -23,6 +26,14 @@ public class Handler {
 	}
 	public void setMappingMethod(Method mappingMethod) {
 		this.mappingMethod = mappingMethod;
+	}
+
+	public String getRequestMethod() {
+		return requestMethod;
+	}
+
+	public void setRequestMethod(String requestMethod) {
+		this.requestMethod = requestMethod;
 	}
 
 }
