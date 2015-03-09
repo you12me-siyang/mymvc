@@ -2,22 +2,24 @@ package com.wbh.mymvc.servlet;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.wbh.mymvc.interceptor.BaseInterceptor;
+
 /**
  * 对拦截器进行封装
  * @author wbh
  */
 public class Obstruct {
 
-	private Class<?> interceptorClass;
+	private BaseInterceptor interceptor;
 	private String[] mappingPath;
 	private String interceptorMethod;
 	private Integer index;
 	
 
-	public Obstruct(Class<?> interceptorClass, String[] mappingPath,
+	public Obstruct(BaseInterceptor interceptor, String[] mappingPath,
 			String interceptorMethod, Integer index) {
 		super();
-		this.interceptorClass = interceptorClass;
+		this.interceptor = interceptor;
 		this.mappingPath = mappingPath;
 		this.interceptorMethod = interceptorMethod;
 		this.index = index;
@@ -58,13 +60,16 @@ public class Obstruct {
 		this.index = index;
 	}
 	
-	public Class<?> getInterceptorClass() {
-		return interceptorClass;
+
+	public BaseInterceptor getInterceptor() {
+		return interceptor;
 	}
 
-	public void setInterceptorClass(Class<?> interceptorClass) {
-		this.interceptorClass = interceptorClass;
+
+	public void setInterceptor(BaseInterceptor interceptor) {
+		this.interceptor = interceptor;
 	}
+
 
 	public String[] getMappingPath() {
 		return mappingPath;

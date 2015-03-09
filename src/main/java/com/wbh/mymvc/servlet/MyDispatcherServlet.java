@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Stack;
 import java.util.Collections;
 
 import javax.servlet.ServletException;
@@ -22,6 +21,7 @@ import com.wbh.mymvc.annotation.MyRequestMapping;
 import com.wbh.mymvc.ui.Model;
 import com.wbh.mymvc.ui.MyModelAndView;
 import com.wbh.mymvc.util.ComparatorObstructUtil;
+import com.wbh.mymvc.util.InterceptorFactory;
 import com.wbh.mymvc.util.MvcUtil;
 
 /**
@@ -39,8 +39,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private String viewPath = "";
 	private Map<String, Handler> hs = new HashMap<String, Handler>();
 	private List<Obstruct> os = new ArrayList<Obstruct>();
-	private Stack<Obstruct> obstructStack = new Stack<Obstruct>();
-	private String appName = "";
+	private List<Obstruct> matchObstruct = new ArrayList<Obstruct>();
 
 	/**
 	 * 该servlet在服务器启动时调用init()初始化，这里主要加载mvc配置文件，根据用户配置的控制器路径将被
@@ -71,13 +70,17 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 	}
 
+	/*
+	 * 初始化部分参数
+	 */
 	private void initParameter() {
-		appName = this.getServletContext().getContextPath();
-		logger.info("上下文目录:" + appName);
 		viewPath = p.getProperty("myview.path");
 		logger.info("映射view目录:" + viewPath);
 	}
 
+	/*
+	 * 加载配置文件
+	 */
 	private void loadConfigFile() {
 		String mvcConfigLocation = getInitParameter("mvcConfigLocation");
 		logger.info(mvcConfigLocation);
@@ -93,6 +96,9 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		}
 	}
 
+	/*
+	 * 加载控制器
+	 */
 	private void loadController() {
 
 		String controllerPath = p.getProperty("controller.annotated.path");
@@ -119,6 +125,9 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		}
 	}
 
+	/*
+	 * 映射控制器方法
+	 */
 	private void mapMethod() {
 
 		Method[] ms = null;
@@ -128,18 +137,28 @@ public class MyDispatcherServlet extends MyBaseServlet {
 			String mappingUrl = "";
 			for (Method m : ms) {
 				if (m.isAnnotationPresent(MyRequestMapping.class)) {
-					mappingUrl = appName
+					mappingUrl = this.getServletContext().getContextPath()
 							+ m.getAnnotation(MyRequestMapping.class).value()
 									.trim();
 					rm = m.getAnnotation(MyRequestMapping.class).method()
 							.trim().toUpperCase();
 					logger.info("映射url:" + mappingUrl);
-					hs.put(mappingUrl + rm, new Handler(c, m, rm));// 先直接拼接字符串当key，以后再优化
+					
+					try {
+						hs.put(mappingUrl + rm, new Handler(c.newInstance(), m, rm));// 先直接拼接字符串当key，以后再优化
+					} catch (InstantiationException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
 	}
 
+	/*
+	 * 加载控制器
+	 */
 	private void loadInterceptor() {
 		String controllerPath = p.getProperty("interception.path").trim();
 		String filePath = "";
@@ -164,8 +183,9 @@ public class MyDispatcherServlet extends MyBaseServlet {
 							.interceptionMethod();
 					index = c.getAnnotation(MyInterceptor.class).index();
 
-					os.add(new Obstruct(c, mappingPath, interceptorMethod,
-							index));
+					os.add(new Obstruct(
+							InterceptorFactory.createInterceptor(c),
+							mappingPath, interceptorMethod, index));
 					logger.info("加载interceptor:" + c.getName());
 				}
 			} catch (ClassNotFoundException e) {
@@ -178,11 +198,9 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	/**
 	 * springMVC的拦截器栈虽然形式上是一个栈的类型，在底层实现却没有使用stack
 	 * 使用单个stack在afterHandler和afterViewLoad同时需要逆向读出的要求下实
-	 * 现起来繁琐，springMVC底层维护了一个HandlerExecutionChain存放handler和
-	 * interceptor 对象的集合，服务器在启动时所有配置在spring配置文件中的拦截器
-	 * 便已经实例化，springMVC在匹配到拦截器后直接调用对象的方法，而我的做法是，
-	 * 匹配到后再实例化，这必将引起一些性能上的损失，这将在后续版本中有所改进，现在
-	 * 以完成功能为主。
+	 * 现起来繁琐，springMVC底层维护了一个HandlerExecutionChain存放handler和 interceptor
+	 * 对象的集合，服务器在启动时所有配置在spring配置文件中的拦截器
+	 * 便已经实例化（通过IOC），这里在2.1版本后已经修改为何springMVC类似：在服务器启动时实例化
 	 */
 	/**
 	 * 和springMVC一样使用反射来调用匹配的控制器方法
@@ -192,8 +210,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 */
 	private void doService(HttpServletRequest req, HttpServletResponse resp) {
 
-		obstructStack.clear();
-
 		Handler h = getHandler(req, resp);
 		MyModelAndView mv = new MyModelAndView();
 
@@ -201,6 +217,9 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		if (null == h) { // url已被mapping才进行拦截否则直接返回
 			return;
 		}
+
+		initMatchObstructList(req);
+
 		/*
 		 * 这里的处理和springMVC有所不同，这里在beforHandler返回false时直接返回，而
 		 * springMVC会调用afterCompletion方法，此时的afterCompletion和返回ture的
@@ -212,7 +231,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 		mv = invokeMappedMethod(h, req, resp);
 
-		
 		doAfterHandler(req, resp, mv);
 
 		if ((null == mv) || (("").equals(mv.getView()))) {
@@ -221,44 +239,55 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 		loadView(mv, req, resp);
 
-		doAfterViewLoad(req, resp, h);
+		doAfterViewLoad(req, resp);
+
+	}
+
+	private void initMatchObstructList(HttpServletRequest req) {
+
+		matchObstruct.clear();// 清空匹配的拦截器集合
+
+		for (int i = 0; i < os.size(); i++) {
+			Obstruct o = os.get(i);
+			if (o.pathMatch(req)) {
+				matchObstruct.add(o);// 可以认为matchObstruct依旧是按照index赠序排列
+			}
+		}
 
 	}
 
 	private void doAfterViewLoad(HttpServletRequest req,
-			HttpServletResponse resp, Handler h) {
+			HttpServletResponse resp) {
+		
+		for (int i = matchObstruct.size() - 1; i >= 0; i--) {
+			Obstruct o = matchObstruct.get(i);
+			try {
+
+				o.getInterceptor().afterViewLoad(req, resp);
+
+			} catch (Exception e) {
+
+				e.printStackTrace();
+
+			}
+		}
 
 	}
 
 	private void doAfterHandler(HttpServletRequest req,
 			HttpServletResponse resp, MyModelAndView mv) {
-		
-		Class<?> c = null;
-		
-		for (int i=os.size()-1;i>=0;i--) {
-			Obstruct o =os.get(i);
-			if (o.pathMatch(req)) {
-				try {
-					c = o.getInterceptorClass();
-					Method m = c.getMethod("afterHandler", new Class<?>[] {
-							javax.servlet.http.HttpServletRequest.class,
-							javax.servlet.http.HttpServletResponse.class,
-							MyModelAndView.class });
-					 m.invoke(c.newInstance(), new Object[] { req,resp,mv });
-					obstructStack.push(o);
-				} catch (NoSuchMethodException e) {
-					e.printStackTrace();
-				} catch (SecurityException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				} catch (InvocationTargetException e) {
-					e.printStackTrace();
-				} catch (InstantiationException e) {
-					e.printStackTrace();
-				}
+
+		//降序
+		for (int i = matchObstruct.size() - 1; i >= 0; i--) {
+			Obstruct o = matchObstruct.get(i);
+			try {
+
+				o.getInterceptor().afterHandler(req, resp, mv);
+
+			} catch (Exception e) {
+
+				e.printStackTrace();
+
 			}
 		}
 
@@ -267,34 +296,24 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private boolean doBeforeHandler(HttpServletRequest req,
 			HttpServletResponse resp) {
 
-		Class<?> c = null;
 		boolean b = true;
-		for (Obstruct o : os) {
-			if (o.pathMatch(req)) {
-				try {
-					c = o.getInterceptorClass();
-					Method m = c.getMethod("beforeHandler", new Class<?>[] {
-							javax.servlet.http.HttpServletRequest.class,
-							javax.servlet.http.HttpServletResponse.class});
-					b = (boolean) m.invoke(c.newInstance(), new Object[] { req,
-							resp });
-					obstructStack.push(o);
-				} catch (NoSuchMethodException e) {
-					e.printStackTrace();
-				} catch (SecurityException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				} catch (InvocationTargetException e) {
-					e.printStackTrace();
-				} catch (InstantiationException e) {
-					e.printStackTrace();
-				}
+
+		for (Obstruct o : matchObstruct) {
+
+			try {
+
+				b = o.getInterceptor().beforeHandler(req, resp);
+
+			} catch (Exception e) {
+
+				e.printStackTrace();
+
 			}
+
 		}
+
 		return b;
+
 	}
 
 	/**
@@ -321,9 +340,8 @@ public class MyDispatcherServlet extends MyBaseServlet {
 			HttpServletRequest req, HttpServletResponse resp) {
 		Model model = new Model();
 		Method m = h.getMappingMethod();
-		Class<?> c = h.getControllerClass();
 		try {
-			return (MyModelAndView) m.invoke(c.newInstance(), new Object[] {
+			return (MyModelAndView) m.invoke(h.getController(), new Object[] {
 					model, req, resp });
 		} catch (IllegalAccessException e1) {
 			e1.printStackTrace();
@@ -334,10 +352,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		} catch (InvocationTargetException e1) {
 			e1.printStackTrace();
 			return null;
-		} catch (InstantiationException e1) {
-			e1.printStackTrace();
-			return null;
-		}
+		} 
 	}
 
 	/**
@@ -350,7 +365,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private void loadView(MyModelAndView mv, HttpServletRequest req,
 			HttpServletResponse resp) {
 		Model m = mv.getModel();
-		for(String s:mv.getModel().keySet()){
+		for (String s : mv.getModel().keySet()) {
 			req.setAttribute(s, m.get(s));
 		}
 		String viewName = mv.getView().trim();

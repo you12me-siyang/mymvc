@@ -5,21 +5,22 @@ import java.lang.reflect.Method;
 
 public class Handler {
 	
-	private Class<?> controllerClass;
+	private Object controller;
 	private Method mappingMethod;
 	private String requestMethod;
 	
-	public Handler(Class<?> controllerClass,Method mappingMethod,String requestMethod) {
-		this.controllerClass = controllerClass;
+	public Handler(Object controller,Method mappingMethod,String requestMethod) {
+		this.controller = controller;
 		this.mappingMethod = mappingMethod;
 		this.requestMethod = requestMethod;
 	}
 	
-	public Class<?> getControllerClass() {
-		return controllerClass;
+	
+	public Object getController() {
+		return controller;
 	}
-	public void setControllerClass(Class<?> controllerClass) {
-		this.controllerClass = controllerClass;
+	public void setController(Object controller) {
+		this.controller = controller;
 	}
 	public Method getMappingMethod() {
 		return mappingMethod;
