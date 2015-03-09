@@ -6,4 +6,8 @@ public class Model extends HashMap<String, Object> {
 
 	private static final long serialVersionUID = 7099797840377368026L;
 	
+	public HashMap<String,Object> asMap(){
+		return this;
+	}
+	
 }

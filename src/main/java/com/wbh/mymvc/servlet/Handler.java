@@ -1,4 +1,4 @@
-package com.wbh.mymvc.entity;
+package com.wbh.mymvc.servlet;
 
 import java.lang.reflect.Method;
 

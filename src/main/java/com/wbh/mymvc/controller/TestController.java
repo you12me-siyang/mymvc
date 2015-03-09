@@ -12,10 +12,10 @@ import com.wbh.mymvc.ui.MyModelAndView;
 @MyController
 public class TestController {
 
-	@MyRequestMapping(value = "/test",method = "POST")
+	@MyRequestMapping(value = "/test",method = "GET")
 	public MyModelAndView test(Model model,HttpServletRequest req,HttpServletResponse resp ){
 		System.out.println("=============invoke method:test()=================");
-		req.setAttribute("msg", "5555555555555555555555");
+		model.put("msg", "555555555555");
 		return new MyModelAndView("testview",model);
 	}
 	
