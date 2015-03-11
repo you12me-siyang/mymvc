@@ -201,8 +201,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 现起来繁琐，springMVC底层维护了一个HandlerExecutionChain存放handler和 interceptor
 	 * 对象的集合，服务器在启动时所有配置在spring配置文件中的拦截器
 	 * 便已经实例化（通过IOC），这里在2.1版本后已经修改为何springMVC类似：在服务器启动时实例化
-	 */
-	/**
+	 *
 	 * 和springMVC一样使用反射来调用匹配的控制器方法
 	 * 
 	 * @param req
@@ -296,13 +295,13 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private boolean doBeforeHandler(HttpServletRequest req,
 			HttpServletResponse resp) {
 
-		boolean b = true;
-
 		for (Obstruct o : matchObstruct) {
 
 			try {
 
-				b = o.getInterceptor().beforeHandler(req, resp);
+				if(!o.getInterceptor().beforeHandler(req, resp)){
+					return false;
+				}
 
 			} catch (Exception e) {
 
@@ -312,7 +311,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 		}
 
-		return b;
+		return true;
 
 	}
 
