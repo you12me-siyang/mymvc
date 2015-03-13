@@ -20,9 +20,9 @@ import com.wbh.mymvc.annotation.MyInterceptor;
 import com.wbh.mymvc.annotation.MyRequestMapping;
 import com.wbh.mymvc.ui.Model;
 import com.wbh.mymvc.ui.MyModelAndView;
+import com.wbh.mymvc.util.ClassScanUtil;
 import com.wbh.mymvc.util.ComparatorObstructUtil;
 import com.wbh.mymvc.util.InterceptorFactory;
-import com.wbh.mymvc.util.MvcUtil;
 
 /**
  * 请求调度核心类
@@ -33,6 +33,11 @@ import com.wbh.mymvc.util.MvcUtil;
 public class MyDispatcherServlet extends MyBaseServlet {
 
 	private static final long serialVersionUID = 5021042324168770425L;
+
+	public static final String PATH_CONTROLLER_ANNOTATED = "path.controller.annotated";
+	public static final String PATH_MYVIEW = "path.myview";
+	public static final String PATH_INTERCEPTOR = "path.interceptor";
+	public static final String MVCCONFIGLOCATION = "mvcConfigLocation";
 
 	private Properties p;
 	private List<Class<?>> cs = new ArrayList<Class<?>>();
@@ -74,7 +79,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 初始化部分参数
 	 */
 	private void initParameter() {
-		viewPath = p.getProperty("myview.path");
+		viewPath = p.getProperty(PATH_MYVIEW);
 		logger.info("映射view目录:" + viewPath);
 	}
 
@@ -82,7 +87,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 加载配置文件
 	 */
 	private void loadConfigFile() {
-		String mvcConfigLocation = getInitParameter("mvcConfigLocation");
+		String mvcConfigLocation = getInitParameter(MVCCONFIGLOCATION);
 		logger.info(mvcConfigLocation);
 		InputStream inputStream = this.getServletContext().getResourceAsStream(
 				mvcConfigLocation);
@@ -101,26 +106,21 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 */
 	private void loadController() {
 
-		String controllerPath = p.getProperty("controller.annotated.path");
+		String controllerPath = p.getProperty(PATH_CONTROLLER_ANNOTATED);
 		String filePath = "";
 		String classPath = this.getClass().getClassLoader().getResource("")
 				.getPath();
 
 		filePath = classPath + controllerPath;
-		List<String> allClassName = new ArrayList<String>();
+		List<Class<?>> allClass = new ArrayList<Class<?>>();
 
-		MvcUtil.getAllClassName(classPath, filePath, allClassName);
+		ClassScanUtil.getScanResultClass(classPath, filePath, allClass);
 
-		for (String s : allClassName) {
-			try {
+		for (Class<?> c : allClass) {
 
-				Class<?> c = Class.forName(s);
-				if (c.isAnnotationPresent(MyController.class)) {
-					cs.add(c);
-					logger.info("加载controller:" + c.getName());
-				}
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			if (c.isAnnotationPresent(MyController.class)) {
+				cs.add(c);
+				logger.info("加载controller:" + c.getName());
 			}
 		}
 	}
@@ -143,9 +143,10 @@ public class MyDispatcherServlet extends MyBaseServlet {
 					rm = m.getAnnotation(MyRequestMapping.class).method()
 							.trim().toUpperCase();
 					logger.info("映射url:" + mappingUrl);
-					
+
 					try {
-						hs.put(mappingUrl + rm, new Handler(c.newInstance(), m, rm));// 先直接拼接字符串当key，以后再优化
+						hs.put(mappingUrl + rm, new Handler(c.newInstance(), m,
+								rm));// 先直接拼接字符串当key，以后再优化
 					} catch (InstantiationException e) {
 						e.printStackTrace();
 					} catch (IllegalAccessException e) {
@@ -160,22 +161,20 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 加载控制器
 	 */
 	private void loadInterceptor() {
-		String controllerPath = p.getProperty("interception.path").trim();
+		String controllerPath = p.getProperty(PATH_INTERCEPTOR).trim();
 		String filePath = "";
 		String classPath = this.getClass().getClassLoader().getResource("")
 				.getPath();
 
 		filePath = classPath + controllerPath;
-		List<String> allClassName = new ArrayList<String>();
+		List<Class<?>> allClass = new ArrayList<Class<?>>();
 
-		MvcUtil.getAllClassName(classPath, filePath, allClassName);
+		ClassScanUtil.getScanResultClass(classPath, filePath, allClass);
 
 		String[] mappingPath = {};
 		String interceptorMethod = "";
 		int index = 0;
-		for (String s : allClassName) {
-			try {
-				Class<?> c = Class.forName(s);
+		for (Class<?> c : allClass) {
 				if (c.isAnnotationPresent(MyInterceptor.class)) {
 					mappingPath = c.getAnnotation(MyInterceptor.class)
 							.mappingPath();
@@ -188,9 +187,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 							mappingPath, interceptorMethod, index));
 					logger.info("加载interceptor:" + c.getName());
 				}
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
 		}
 		Collections.sort(os, new ComparatorObstructUtil());
 	}
@@ -201,7 +197,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 现起来繁琐，springMVC底层维护了一个HandlerExecutionChain存放handler和 interceptor
 	 * 对象的集合，服务器在启动时所有配置在spring配置文件中的拦截器
 	 * 便已经实例化（通过IOC），这里在2.1版本后已经修改为何springMVC类似：在服务器启动时实例化
-	 *
+	 * 
 	 * 和springMVC一样使用反射来调用匹配的控制器方法
 	 * 
 	 * @param req
@@ -212,7 +208,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		Handler h = getHandler(req, resp);
 		MyModelAndView mv = new MyModelAndView();
 
-		// 未匹配可以自定义异常，先放这里
 		if (null == h) { // url已被mapping才进行拦截否则直接返回
 			return;
 		}
@@ -257,7 +252,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 	private void doAfterViewLoad(HttpServletRequest req,
 			HttpServletResponse resp) {
-		
+
 		for (int i = matchObstruct.size() - 1; i >= 0; i--) {
 			Obstruct o = matchObstruct.get(i);
 			try {
@@ -276,7 +271,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private void doAfterHandler(HttpServletRequest req,
 			HttpServletResponse resp, MyModelAndView mv) {
 
-		//降序
+		// 降序
 		for (int i = matchObstruct.size() - 1; i >= 0; i--) {
 			Obstruct o = matchObstruct.get(i);
 			try {
@@ -299,7 +294,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 			try {
 
-				if(!o.getInterceptor().beforeHandler(req, resp)){
+				if (!o.getInterceptor().beforeHandler(req, resp)) {
 					return false;
 				}
 
@@ -351,7 +346,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		} catch (InvocationTargetException e1) {
 			e1.printStackTrace();
 			return null;
-		} 
+		}
 	}
 
 	/**
