@@ -2,7 +2,7 @@
 <beans>
 	<bean name="testbean" class="com.wbh.mymvc.test.TestBean" isLazyInit="false" initMethod="initMethod">
 		<property name="testbean1" ref="true"></property>
-		<property name="testconfigured" value="hello-testconfigured"></property>
+		<property name="testconfigured" value="1234567890"></property>
 	</bean>
 	<bean name="testbean1" class="com.wbh.mymvc.test.TestBean1">
 		<property name="testbean2" ref="true"></property>

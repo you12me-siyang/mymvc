@@ -90,7 +90,8 @@ public abstract class AbstractConfigWebContext implements
 		refreshBeanFactory();
 		// 预处理（实例化）需缓存非懒加载的所有Bean
 		pretreatNeedCacheNoLazyBean();
-
+//		TestBean t = (TestBean) beanFactory.getBean("testbean");
+//		t.printTestconfigured();
 	}
 
 	private void pretreatNeedCacheNoLazyBean() {
