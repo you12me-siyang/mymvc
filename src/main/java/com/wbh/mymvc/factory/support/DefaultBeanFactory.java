@@ -94,23 +94,32 @@ public class DefaultBeanFactory implements WebContextBeanFactory {
 		Class<?> c = bd.getBeanClass();
 		Method initM = bd.getInitMethod();
 		Object o = null;
-		Field[] fs = c.getFields();
+		Field[] fs = c.getDeclaredFields();//包括私有变量
 		
 		try {
-			
 			o = c.newInstance();     //无参构造函数
 			
+			//调用自定义初始化方法
 			if (null != initM) {
 				initM.invoke(o, new Object[]{});  //initMethod  无参
 			}
+			//注入依赖
 			if (null != bd.getInjections()&&(!bd.getInjections().isEmpty())){
-				
 				for(BeanDefinition b:bd.getInjections()){
 					for(Field f:fs){
-						
 						if(b.getBeanName().equals(f.getName())){
-							
 							f.set(o, getBean(b.getBeanName())); //递归
+						}
+					}
+				}
+			}
+			//注入配置文件中直接配置的变量
+			if(null != bd.getConfigurables()&&!bd.getConfigurables().isEmpty()){
+				for(String str:bd.getConfigurables().keySet()){
+					for(Field f:fs){
+						f.setAccessible(true);//无视访问权限
+						if(str.equals(f.getName())){
+							f.set(o, bd.getConfigurables().get(str));
 						}
 					}
 				}
@@ -125,6 +134,8 @@ public class DefaultBeanFactory implements WebContextBeanFactory {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
+		
+		
 		if(bd.isNeedCache()){
 			addBeanInstantiationMap(bd.getBeanName(), o);
 		}
@@ -133,7 +144,6 @@ public class DefaultBeanFactory implements WebContextBeanFactory {
 
 	@Override
 	public void setServletContext(ServletContext servletContext) {
-		// TODO Auto-generated method stub
 		
 	}
 

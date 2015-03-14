@@ -1,9 +1,7 @@
 package com.wbh.mymvc.test;
 
-import com.wbh.mymvc.annotation.Bean;
 import com.wbh.mymvc.annotation.Injection;
 
-@Bean
 public class TestBean1 implements Test
 {
 	@Injection

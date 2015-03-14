@@ -43,6 +43,7 @@ public class ContextLoaderListener implements ServletContextListener {
 
 		try {
 			p.load(inputStream);
+			inputStream.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

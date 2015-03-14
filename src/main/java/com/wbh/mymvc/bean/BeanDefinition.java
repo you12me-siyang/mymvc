@@ -1,7 +1,9 @@
 package com.wbh.mymvc.bean;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class BeanDefinition {
@@ -12,7 +14,10 @@ public class BeanDefinition {
 	
 	private boolean isNeedCache;
 	
+	//需注入的引用
 	private Set<BeanDefinition> injections = new HashSet<BeanDefinition>();
+	//可配置变量 用于通过配置文件配置Bean,通过注解配置BeanDefinition时不使用
+	private Map<String,Object> configurables = new HashMap<String ,Object>();
 	
 	private Method initMethod;
 	
@@ -82,6 +87,13 @@ public class BeanDefinition {
 	public void setNeedCache(boolean isNeedCache) {
 		this.isNeedCache = isNeedCache;
 	}
-	
 
+	public Map<String, Object> getConfigurables() {
+		return configurables;
+	}
+
+	public void setConfigurables(Map<String, Object> configurables) {
+		this.configurables = configurables;
+	}
+	
 }
