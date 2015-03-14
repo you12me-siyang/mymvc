@@ -14,6 +14,7 @@ import javax.servlet.ServletContext;
 import com.wbh.mymvc.bean.BeanBody;
 import com.wbh.mymvc.bean.BeanDefinition;
 import com.wbh.mymvc.factory.WebContextBeanFactory;
+import com.wbh.mymvc.util.Assert;
 
 public class DefaultBeanFactory implements WebContextBeanFactory {
 
@@ -21,10 +22,13 @@ public class DefaultBeanFactory implements WebContextBeanFactory {
 	private final Map<String, Object> beanInstantiationMap = new ConcurrentHashMap<String, Object>();
 
 	public void addBeanDefinition(BeanDefinition bd) {
+		Assert.isKeyExist(bd.getBeanName(), beanDefinitionMap, "已存在同名BeanDefinition，可以尝试重新自定义BeanName！");
 		this.beanDefinitionMap.put(bd.getBeanName(), bd);
+		System.out.println("load BeanDefinition:"+bd.getBeanName());
 	}
 	
 	public void addBeanInstantiationMap(String beanName,Object bean){
+		Assert.isKeyExist(beanName, beanInstantiationMap, "已存在同名Bean实例，可以尝试重新自定义BeanName！");
 		this.beanInstantiationMap.put(beanName, bean);
 	}
 	

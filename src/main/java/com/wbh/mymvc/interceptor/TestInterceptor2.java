@@ -3,10 +3,11 @@ package com.wbh.mymvc.interceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.wbh.mymvc.annotation.Bean;
 import com.wbh.mymvc.annotation.MyInterceptor;
 import com.wbh.mymvc.ui.MyModelAndView;
 
-
+@Bean
 @MyInterceptor(index = 2,mappingPath={"/member/*"})
 public class TestInterceptor2 extends InterceptorAdapt {
 	

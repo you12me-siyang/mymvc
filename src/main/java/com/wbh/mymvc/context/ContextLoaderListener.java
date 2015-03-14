@@ -11,6 +11,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import com.wbh.mymvc.resolver.ConfiguredBeanResolver;
+import com.wbh.mymvc.util.Assert;
 import com.wbh.mymvc.util.ReflectUtil;
 
 public class ContextLoaderListener implements ServletContextListener {
@@ -33,6 +34,9 @@ public class ContextLoaderListener implements ServletContextListener {
 	private void loadConfigFile(ServletContext sc) {
 		
 		String contextConfigLocation = sc.getInitParameter(CONTEXTCONFIGLOCATION);
+		
+		Assert.isBlankOrNull(contextConfigLocation, "上下文配置文件未配置！");
+		
 		InputStream inputStream = sc.getResourceAsStream(contextConfigLocation);
 
 		p = new Properties();
@@ -42,10 +46,10 @@ public class ContextLoaderListener implements ServletContextListener {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+		
 	}
 
 	private WebContext initWebApplicationContext(ServletContext servletContext) {
-
 		if (this.context == null) {
 			this.context = createWebApplicationContext(servletContext);
 			configureAndRefreshWebContext(servletContext);
@@ -71,6 +75,7 @@ public class ContextLoaderListener implements ServletContextListener {
 
 	private WebContext determineContext(ServletContext servletContext) {
 		String contextName = p.getProperty(CLASS_CONTEXTCLASS);
+		Assert.isBlankOrNull(contextName, "上下文类未指定！");
 		WebContext wc = (WebContext) ReflectUtil.newinstance(contextName, new Object[]{});
 		return wc;
 	}
@@ -78,10 +83,17 @@ public class ContextLoaderListener implements ServletContextListener {
 	private List<ConfiguredBeanResolver> loadBeanResolvers(
 			ServletContext servletContext) {
 		List<ConfiguredBeanResolver> cbrs = new ArrayList<ConfiguredBeanResolver>();
-		String[] resolverName = p.getProperty(CLASS_RESOLVER).split(",");
+		String resolvers = p.getProperty(CLASS_RESOLVER).trim();
+		if(null == resolvers || ("").equals(resolvers) ){
+			return null;
+		}
+		String[] resolverClazz = resolvers.split(",");
 		ConfiguredBeanResolver cbr = null;
-		for(String str:resolverName){
-			cbr = (ConfiguredBeanResolver)ReflectUtil.newinstance(str,new Object[]{});
+		for(String str:resolverClazz){
+			if(("").equals(str.trim())){
+				continue;
+			}
+			cbr = (ConfiguredBeanResolver)ReflectUtil.newinstance(str.trim(),new Object[]{});
 			cbr.setProperties(p);
 			cbrs.add(cbr);
 		}

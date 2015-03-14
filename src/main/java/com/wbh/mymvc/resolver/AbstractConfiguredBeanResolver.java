@@ -26,6 +26,10 @@ public abstract class AbstractConfiguredBeanResolver implements
 	
 	protected void  addBeanDefinitionList(DefaultBeanFactory beanFactory ,List<Class<?>> beanClass){
 
+		if(null == beanClass || beanClass.isEmpty()){
+			return;
+		}
+		
 		BeanDefinition bd = null;
 		
 		Method[] ms = null;
@@ -37,12 +41,16 @@ public abstract class AbstractConfiguredBeanResolver implements
 			fs = c.getFields();
 			bd.setBeanClass(c);
 			
-			if(c.getAnnotation(Bean.class)
-					.value().trim().equals("")){
+			/*
+			 * 默认为类名的全小写，可自行配置
+			 * 注意：beanName大小写无关
+			 */
+			if(c.getAnnotation(Bean.class).value().trim().equals("")){
 				bd.setBeanName(c.getSimpleName().toLowerCase());
 			}else{
 				bd.setBeanName(c.getAnnotation(Bean.class).value().trim());
 			}
+			
 			bd.setLazyInit(c.getAnnotation(Bean.class).isLazyInit());
 			bd.setNeedCache(c.getAnnotation(Bean.class).isNeedCache());
 			
@@ -64,7 +72,6 @@ public abstract class AbstractConfiguredBeanResolver implements
 			}
 			
 			beanFactory.addBeanDefinition(bd);
-			System.out.println("load Bean:"+bd.getBeanName());
 		}
 		
 	}

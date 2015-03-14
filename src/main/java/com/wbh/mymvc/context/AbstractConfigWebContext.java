@@ -13,7 +13,7 @@ public abstract class AbstractConfigWebContext implements
 		ConfigurableWebContext {
 
 	private ServletContext servletContext;
-	
+
 	private DefaultBeanFactory beanFactory;
 
 	private List<ConfiguredBeanResolver> cbrs;
@@ -25,10 +25,11 @@ public abstract class AbstractConfigWebContext implements
 
 	private void loadBeanDefinitions(DefaultBeanFactory beanFactory) {
 
-		for (ConfiguredBeanResolver cbr : cbrs) {
-			cbr.fillWithBeanDefinition(beanFactory,servletContext);
+		if (null != cbrs && !cbrs.isEmpty()) {
+			for (ConfiguredBeanResolver cbr : cbrs) {
+				cbr.fillWithBeanDefinition(beanFactory, servletContext);
+			}
 		}
-
 	}
 
 	public DefaultBeanFactory getBeanFactory() {
@@ -47,45 +48,47 @@ public abstract class AbstractConfigWebContext implements
 	public List<Object> getBeansByAnnotation(Class<? extends Annotation> c) {
 		return beanFactory.getBeansByAnnotation(c);
 	}
+
 	@Override
 	public BeanBody getBeanBody(String beanName) {
 		return beanFactory.getBeanBody(beanName);
 	}
+
 	@Override
 	public List<BeanBody> getBeanBodysByAnnotation(Class<? extends Annotation> c) {
 		return beanFactory.getBeanBodysByAnnotation(c);
 	}
-	
+
 	@Override
 	public void removeAllBeanInstantiation() {
 		beanFactory.removeAllBeanInstantiation();
 	}
-	
+
 	@Override
 	public void removeBeanInstantiation(String beanName) {
 		beanFactory.removeBeanInstantiation(beanName);
 	}
-	
+
 	@Override
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
 	}
-	
+
 	@Override
 	public void setConfiguredBeanResolver(List<ConfiguredBeanResolver> cbrs) {
-		
 		this.cbrs = cbrs;
 	}
+
 	@Override
 	public Object getBean(String beanName) {
 		return beanFactory.getBean(beanName);
 	}
-	
+
 	@Override
 	public void refresh() {
-		//加载用户配置的所有BeanDefinition
+		// 加载用户配置的所有BeanDefinition
 		refreshBeanFactory();
-		//预处理（实例化）需缓存非懒加载的所有Bean
+		// 预处理（实例化）需缓存非懒加载的所有Bean
 		pretreatNeedCacheNoLazyBean();
 	}
 
