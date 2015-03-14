@@ -35,13 +35,15 @@ public static void getAnnotatedScanResultClass(String classPath ,String filePath
 		String className = "";
         Class<?> c = null;
         for (File f : fs) { 
+        	
             if (f.isDirectory()) { 
-            	getScanResultClass(classPath,f.getAbsolutePath(),annotatedClass); 
+            	getAnnotatedScanResultClass(classPath, f.getAbsolutePath(), annotatedClass, annotation);; 
             } else { 
             	className = f.getPath().replace(classPath.substring(1).replace("/", "\\"), "").replace("\\", ".").replace(".class", "");
             	try {
             		c = Class.forName(className);
             		if(c.isAnnotationPresent(annotation)){
+            			
             			annotatedClass.add(c);
             		}
 				} catch (ClassNotFoundException e) {

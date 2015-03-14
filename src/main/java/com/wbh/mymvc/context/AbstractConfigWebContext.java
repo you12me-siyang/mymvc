@@ -1,9 +1,11 @@
 package com.wbh.mymvc.context;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import com.wbh.mymvc.bean.BeanBody;
 import com.wbh.mymvc.factory.support.DefaultBeanFactory;
 import com.wbh.mymvc.resolver.ConfiguredBeanResolver;
 
@@ -42,6 +44,29 @@ public abstract class AbstractConfigWebContext implements
 	}
 
 	@Override
+	public List<Object> getBeansByAnnotation(Class<? extends Annotation> c) {
+		return beanFactory.getBeansByAnnotation(c);
+	}
+	@Override
+	public BeanBody getBeanBody(String beanName) {
+		return beanFactory.getBeanBody(beanName);
+	}
+	@Override
+	public List<BeanBody> getBeanBodysByAnnotation(Class<? extends Annotation> c) {
+		return beanFactory.getBeanBodysByAnnotation(c);
+	}
+	
+	@Override
+	public void removeAllBeanInstantiation() {
+		beanFactory.removeAllBeanInstantiation();
+	}
+	
+	@Override
+	public void removeBeanInstantiation(String beanName) {
+		beanFactory.removeBeanInstantiation(beanName);
+	}
+	
+	@Override
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
 	}
@@ -50,7 +75,6 @@ public abstract class AbstractConfigWebContext implements
 	public void setConfiguredBeanResolver(List<ConfiguredBeanResolver> cbrs) {
 		
 		this.cbrs = cbrs;
-
 	}
 	@Override
 	public Object getBean(String beanName) {

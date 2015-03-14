@@ -82,5 +82,6 @@ public class BeanDefinition {
 	public void setNeedCache(boolean isNeedCache) {
 		this.isNeedCache = isNeedCache;
 	}
+	
 
 }

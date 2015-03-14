@@ -16,6 +16,7 @@ import com.wbh.mymvc.util.ReflectUtil;
 public class ContextLoaderListener implements ServletContextListener {
 
 	public static final String CONTEXTCONFIGLOCATION = "contextConfigLocation";
+	public static final String WEBCONTEXT = "webContext";
 	public static final String CLASS_CONTEXTCLASS = "class.contextclass";
 	public static final String CLASS_RESOLVER = "class.resolver";
 
@@ -26,7 +27,7 @@ public class ContextLoaderListener implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent sce) {
 		ServletContext sc = sce.getServletContext();
 		loadConfigFile(sc);
-		initWebApplicationContext(sc);
+		sc.setAttribute(WEBCONTEXT, initWebApplicationContext(sc));
 	}
 
 	private void loadConfigFile(ServletContext sc) {

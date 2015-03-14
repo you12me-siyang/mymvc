@@ -4,11 +4,13 @@ package com.wbh.mymvc.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.wbh.mymvc.annotation.Bean;
 import com.wbh.mymvc.annotation.MyController;
 import com.wbh.mymvc.annotation.MyRequestMapping;
 import com.wbh.mymvc.ui.Model;
 import com.wbh.mymvc.ui.MyModelAndView;
 
+@Bean
 @MyController
 public class TestController {
 

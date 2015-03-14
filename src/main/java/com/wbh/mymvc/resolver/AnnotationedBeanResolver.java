@@ -18,14 +18,12 @@ public class AnnotationedBeanResolver extends AbstractConfiguredBeanResolver {
 			ServletContext servletContext) {
 
 		String controllerPath = propertie.getProperty(RESOLVER_PATH_SCAN);
-		String classPath = this.getClass().getClassLoader().getResource("")
-				.getPath();
+		String classPath = this.getClass().getClassLoader().getResource("").getPath();
 
 		String filePath = classPath + controllerPath;
 		List<Class<?>> beanClass = new ArrayList<Class<?>>();
 		ClassScanUtil.getAnnotatedScanResultClass(classPath, filePath, beanClass, Bean.class);
 		addBeanDefinitionList(beanFactory, beanClass);
-		
 	}
 
 }

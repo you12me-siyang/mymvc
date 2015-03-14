@@ -36,7 +36,9 @@ public abstract class AbstractConfiguredBeanResolver implements
 			ms = c.getMethods();
 			fs = c.getFields();
 			bd.setBeanClass(c);
-			if(c.getAnnotation(Bean.class).value().trim().equals("")){
+			
+			if(c.getAnnotation(Bean.class)
+					.value().trim().equals("")){
 				bd.setBeanName(c.getSimpleName().toLowerCase());
 			}else{
 				bd.setBeanName(c.getAnnotation(Bean.class).value().trim());

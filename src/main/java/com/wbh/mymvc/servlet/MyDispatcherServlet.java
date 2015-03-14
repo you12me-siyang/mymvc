@@ -5,11 +5,11 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Collections;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -18,15 +18,16 @@ import javax.servlet.http.HttpServletResponse;
 import com.wbh.mymvc.annotation.MyController;
 import com.wbh.mymvc.annotation.MyInterceptor;
 import com.wbh.mymvc.annotation.MyRequestMapping;
+import com.wbh.mymvc.bean.BeanBody;
+import com.wbh.mymvc.context.DefaultWebContext;
+import com.wbh.mymvc.interceptor.BaseInterceptor;
 import com.wbh.mymvc.ui.Model;
 import com.wbh.mymvc.ui.MyModelAndView;
-import com.wbh.mymvc.util.ClassScanUtil;
 import com.wbh.mymvc.util.ComparatorObstructUtil;
-import com.wbh.mymvc.util.InterceptorFactory;
 
 /**
  * 请求调度核心类
- * 
+ * 3.0后拦截器和控制器从IOC容器中取出
  * @author wbh
  * @version 1.1
  */
@@ -34,17 +35,17 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 	private static final long serialVersionUID = 5021042324168770425L;
 
-	public static final String PATH_CONTROLLER_ANNOTATED = "path.controller.annotated";
 	public static final String PATH_MYVIEW = "path.myview";
-	public static final String PATH_INTERCEPTOR = "path.interceptor";
 	public static final String MVCCONFIGLOCATION = "mvcConfigLocation";
+	public static final String WEBCONTEXT = "webContext";
 
 	private Properties p;
-	private List<Class<?>> cs = new ArrayList<Class<?>>();
+	private List<BeanBody> controllers = new ArrayList<BeanBody>();
 	private String viewPath = "";
 	private Map<String, Handler> hs = new HashMap<String, Handler>();
-	private List<Obstruct> os = new ArrayList<Obstruct>();
+	private List<Obstruct> obstructs = new ArrayList<Obstruct>();
 	private List<Obstruct> matchObstruct = new ArrayList<Obstruct>();
+	private DefaultWebContext webContext = null;
 
 	/**
 	 * 该servlet在服务器启动时调用init()初始化，这里主要加载mvc配置文件，根据用户配置的控制器路径将被
@@ -79,6 +80,8 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 初始化部分参数
 	 */
 	private void initParameter() {
+		webContext = (DefaultWebContext) this.getServletContext().getAttribute(
+				WEBCONTEXT);
 		viewPath = p.getProperty(PATH_MYVIEW);
 		logger.info("映射view目录:" + viewPath);
 	}
@@ -105,24 +108,8 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 加载控制器
 	 */
 	private void loadController() {
+		controllers = webContext.getBeanBodysByAnnotation(MyController.class);
 
-		String controllerPath = p.getProperty(PATH_CONTROLLER_ANNOTATED);
-		String filePath = "";
-		String classPath = this.getClass().getClassLoader().getResource("")
-				.getPath();
-
-		filePath = classPath + controllerPath;
-		List<Class<?>> allClass = new ArrayList<Class<?>>();
-
-		ClassScanUtil.getScanResultClass(classPath, filePath, allClass);
-
-		for (Class<?> c : allClass) {
-
-			if (c.isAnnotationPresent(MyController.class)) {
-				cs.add(c);
-				logger.info("加载controller:" + c.getName());
-			}
-		}
 	}
 
 	/*
@@ -132,8 +119,9 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 		Method[] ms = null;
 		String rm = null;
-		for (Class<?> c : cs) {
-			ms = c.getMethods();
+		for (BeanBody bb : controllers) {
+			ms = bb.getBeanClass().getMethods();
+
 			String mappingUrl = "";
 			for (Method m : ms) {
 				if (m.isAnnotationPresent(MyRequestMapping.class)) {
@@ -144,51 +132,35 @@ public class MyDispatcherServlet extends MyBaseServlet {
 							.trim().toUpperCase();
 					logger.info("映射url:" + mappingUrl);
 
-					try {
-						hs.put(mappingUrl + rm, new Handler(c.newInstance(), m,
-								rm));// 先直接拼接字符串当key，以后再优化
-					} catch (InstantiationException e) {
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-					}
+					hs.put(mappingUrl + rm, new Handler(bb.getBean(), m, rm));// 先直接拼接字符串当key，以后再优化
 				}
 			}
 		}
 	}
 
 	/*
-	 * 加载控制器
+	 * 加载拦截器
 	 */
 	private void loadInterceptor() {
-		String controllerPath = p.getProperty(PATH_INTERCEPTOR).trim();
-		String filePath = "";
-		String classPath = this.getClass().getClassLoader().getResource("")
-				.getPath();
 
-		filePath = classPath + controllerPath;
-		List<Class<?>> allClass = new ArrayList<Class<?>>();
-
-		ClassScanUtil.getScanResultClass(classPath, filePath, allClass);
-
+		List<Object> os = webContext.getBeansByAnnotation(MyInterceptor.class);
 		String[] mappingPath = {};
 		String interceptorMethod = "";
 		int index = 0;
-		for (Class<?> c : allClass) {
-				if (c.isAnnotationPresent(MyInterceptor.class)) {
-					mappingPath = c.getAnnotation(MyInterceptor.class)
-							.mappingPath();
-					interceptorMethod = c.getAnnotation(MyInterceptor.class)
-							.interceptionMethod();
-					index = c.getAnnotation(MyInterceptor.class).index();
+		for (Object o : os) {
+			mappingPath = o.getClass().getAnnotation(MyInterceptor.class)
+					.mappingPath();
+			interceptorMethod = o.getClass().getAnnotation(MyInterceptor.class)
+					.interceptionMethod();
+			index = o.getClass().getAnnotation(MyInterceptor.class).index();
 
-					os.add(new Obstruct(
-							InterceptorFactory.createInterceptor(c),
-							mappingPath, interceptorMethod, index));
-					logger.info("加载interceptor:" + c.getName());
-				}
+			obstructs.add(new Obstruct((BaseInterceptor) o, mappingPath,
+					interceptorMethod, index));
+			logger.info("加载interceptor:" + o.getClass().getName());
+
 		}
-		Collections.sort(os, new ComparatorObstructUtil());
+
+		Collections.sort(obstructs, new ComparatorObstructUtil());
 	}
 
 	/**
@@ -196,7 +168,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 使用单个stack在afterHandler和afterViewLoad同时需要逆向读出的要求下实
 	 * 现起来繁琐，springMVC底层维护了一个HandlerExecutionChain存放handler和 interceptor
 	 * 对象的集合，服务器在启动时所有配置在spring配置文件中的拦截器
-	 * 便已经实例化（通过IOC），这里在2.1版本后已经修改为何springMVC类似：在服务器启动时实例化
+	 * 便已经实例化（通过IOC），mymvc3.0后加入了IOC已经可以从webcontext中取出拦截器和控制器
 	 * 
 	 * 和springMVC一样使用反射来调用匹配的控制器方法
 	 * 
@@ -241,8 +213,8 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 		matchObstruct.clear();// 清空匹配的拦截器集合
 
-		for (int i = 0; i < os.size(); i++) {
-			Obstruct o = os.get(i);
+		for (int i = 0; i < obstructs.size(); i++) {
+			Obstruct o = obstructs.get(i);
 			if (o.pathMatch(req)) {
 				matchObstruct.add(o);// 可以认为matchObstruct依旧是按照index赠序排列
 			}

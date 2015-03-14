@@ -1,15 +1,21 @@
 package com.wbh.mymvc.factory.support;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.wbh.mymvc.bean.BeanDefinition;
-import com.wbh.mymvc.factory.BeanFactory;
+import javax.servlet.ServletContext;
 
-public class DefaultBeanFactory implements BeanFactory {
+import com.wbh.mymvc.bean.BeanBody;
+import com.wbh.mymvc.bean.BeanDefinition;
+import com.wbh.mymvc.factory.WebContextBeanFactory;
+
+public class DefaultBeanFactory implements WebContextBeanFactory {
 
 	private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<String, BeanDefinition>();
 	private final Map<String, Object> beanInstantiationMap = new ConcurrentHashMap<String, Object>();
@@ -21,7 +27,39 @@ public class DefaultBeanFactory implements BeanFactory {
 	public void addBeanInstantiationMap(String beanName,Object bean){
 		this.beanInstantiationMap.put(beanName, bean);
 	}
-
+	
+	@Override
+	public void removeBeanInstantiation(String beanName){
+		if(beanInstantiationMap.containsKey(beanName)){
+			beanInstantiationMap.remove(beanName);
+		}
+	}
+	@Override
+	public void removeAllBeanInstantiation(){
+		beanInstantiationMap.clear();
+	}
+	@Override
+	public List<Object> getBeansByAnnotation(Class<? extends Annotation> c){
+		List<Object> os = new ArrayList<Object>();
+		for(BeanDefinition bd:beanDefinitionMap.values()){
+			if(bd.getBeanClass().isAnnotationPresent(c)){
+				os.add(getBean(bd.getBeanName()));
+			}
+		}
+		return os;
+	}
+	
+	@Override
+	public List<BeanBody> getBeanBodysByAnnotation(Class<? extends Annotation> c){
+		List<BeanBody> bds = new ArrayList<BeanBody>();
+		for(BeanDefinition bd:beanDefinitionMap.values()){
+			if(bd.getBeanClass().isAnnotationPresent(c)){
+				bds.add(getBeanBody(bd.getBeanName()));
+			}
+		}
+		return bds;
+	}
+	
 	@Override
 	public Object getBean(String beanName) {
 
@@ -87,6 +125,20 @@ public class DefaultBeanFactory implements BeanFactory {
 			addBeanInstantiationMap(bd.getBeanName(), o);
 		}
 		return o;
+	}
+
+	@Override
+	public void setServletContext(ServletContext servletContext) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public BeanBody getBeanBody(String beanName) {
+		if(beanDefinitionMap.containsKey(beanName)){
+			return new BeanBody(beanDefinitionMap.get(beanName).getBeanClass(),getBean(beanName));
+		}
+		return null;
 	}
 
 }
