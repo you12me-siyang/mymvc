@@ -12,7 +12,7 @@ import com.wbh.mymvc.annotation.DestroyMethod;
 import com.wbh.mymvc.annotation.InitMethod;
 import com.wbh.mymvc.annotation.Injection;
 import com.wbh.mymvc.bean.BeanDefinition;
-import com.wbh.mymvc.factory.support.DefaultBeanFactory;
+import com.wbh.mymvc.factory.support.AbstractBeanFactory;
 import com.wbh.mymvc.util.Assert;
 import com.wbh.mymvc.util.ClassScanUtil;
 
@@ -21,7 +21,7 @@ public class AnnotationedBeanResolver extends AbstractConfiguredBeanResolver {
 	private static final String RESOLVER_PATH_SCAN = "annotationedbeanresolver.path.scan";
 
 	@Override
-	public void fillWithBeanDefinition(DefaultBeanFactory beanFactory,
+	public void fillWithBeanDefinition(AbstractBeanFactory beanFactory,
 			ServletContext servletContext) {
 
 		String resolverPathValue = propertie.getProperty(RESOLVER_PATH_SCAN)
@@ -40,7 +40,7 @@ public class AnnotationedBeanResolver extends AbstractConfiguredBeanResolver {
 	}
 
 	private void fillWithMatchingPathBeanDefinition(
-			DefaultBeanFactory beanFactory, String resolverPath) {
+			AbstractBeanFactory beanFactory, String resolverPath) {
 		
 		String classPath = this.getClass().getClassLoader().getResource("").getPath();
 		String filePath = classPath + resolverPath;
@@ -50,7 +50,7 @@ public class AnnotationedBeanResolver extends AbstractConfiguredBeanResolver {
 
 	}
 	
-	private void  addBeanDefinitionList(DefaultBeanFactory beanFactory ,List<Class<?>> beanClass){
+	private void  addBeanDefinitionList(AbstractBeanFactory beanFactory ,List<Class<?>> beanClass){
 
 		if(null == beanClass || beanClass.isEmpty()){
 			return;

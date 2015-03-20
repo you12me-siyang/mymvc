@@ -12,7 +12,6 @@ public class ReflectUtil {
 		try {
 			c = Class.forName(className);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
@@ -32,6 +31,7 @@ public class ReflectUtil {
 		}
 		return o;
 	}
+	
 	public static Class<?>[] argsToTypes(Object[] args){
 		List<Class<?>> cs = new ArrayList<>();
 		for(Object o:args){

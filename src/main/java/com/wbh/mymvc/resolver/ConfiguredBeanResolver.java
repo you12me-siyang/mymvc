@@ -4,12 +4,12 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
-import com.wbh.mymvc.factory.support.DefaultBeanFactory;
+import com.wbh.mymvc.factory.support.AbstractBeanFactory;
 
 public interface ConfiguredBeanResolver {
 	
 	void setProperties(Properties properties);
 	
-	void fillWithBeanDefinition(DefaultBeanFactory beanFactory,ServletContext servletContext);
+	void fillWithBeanDefinition(AbstractBeanFactory beanFactory,ServletContext servletContext);
 
 }

@@ -6,7 +6,31 @@ import java.util.List;
 
 public class ClassScanUtil {
 
-	public static void getScanResultClass(String classPath ,String filePath ,List<Class<?>> allClass) {
+	public static void getScanResultClass(String classPath, String filePath,
+			List<Class<?>> allClass) {
+
+		File dir = new File(filePath);
+		File[] fs = dir.listFiles(); // 包括子目录
+
+		String className = "";
+
+		for (File f : fs) {
+			if (f.isDirectory()) {
+				getScanResultClass(classPath, f.getAbsolutePath(), allClass);
+			} else {
+				className = f.getPath()
+						.replace(classPath.substring(1).replace("/", "\\"), "")
+						.replace("\\", ".").replace(".class", "");
+				try {
+					allClass.add(Class.forName(className));
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+public static void getScanResultInstances(String classPath ,String filePath ,List<Object> instances) {
 		
 		File dir = new File(filePath);
 		File[] fs = dir.listFiles(); //包括子目录
@@ -15,14 +39,10 @@ public class ClassScanUtil {
         
         for (File f : fs) { 
             if (f.isDirectory()) { 
-            	getScanResultClass(classPath,f.getAbsolutePath(),allClass); 
+            	getScanResultInstances(classPath,f.getAbsolutePath(),instances); 
             } else { 
             	className = f.getPath().replace(classPath.substring(1).replace("/", "\\"), "").replace("\\", ".").replace(".class", "");
-            	try {
-					allClass.add(Class.forName(className));
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}       
+            	instances.add(ReflectUtil.newinstance(className, new Object[]{}));       
             } 
         } 
     }

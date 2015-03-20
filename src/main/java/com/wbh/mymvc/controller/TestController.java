@@ -22,7 +22,7 @@ public class TestController {
 	}
 	
 	@MyRequestMapping(value = "/login",method = "GET")
-	public MyModelAndView login(Model model){
+	public MyModelAndView login(Model model,HttpServletRequest req,HttpServletResponse resp){
 		System.out.println("=============invoke method:login()=================");
 		return null;
 	}

@@ -1,7 +1,6 @@
 package com.wbh.mymvc.servlet;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -19,10 +18,12 @@ import com.wbh.mymvc.annotation.MyController;
 import com.wbh.mymvc.annotation.MyInterceptor;
 import com.wbh.mymvc.annotation.MyRequestMapping;
 import com.wbh.mymvc.bean.BeanBody;
+import com.wbh.mymvc.context.ContextLoaderListener;
 import com.wbh.mymvc.context.DefaultWebContext;
 import com.wbh.mymvc.interceptor.BaseInterceptor;
 import com.wbh.mymvc.ui.Model;
 import com.wbh.mymvc.ui.MyModelAndView;
+import com.wbh.mymvc.util.Assert;
 import com.wbh.mymvc.util.ComparatorObstructUtil;
 
 /**
@@ -36,7 +37,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private static final long serialVersionUID = 5021042324168770425L;
 
 	public static final String PATH_MYVIEW = "path.myview";
-	public static final String MVCCONFIGLOCATION = "mvcConfigLocation";
 	public static final String WEBCONTEXT = "webContext";
 
 	private Properties p;
@@ -90,18 +90,11 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	 * 加载配置文件
 	 */
 	private void loadConfigFile() {
-		String mvcConfigLocation = getInitParameter(MVCCONFIGLOCATION);
-		logger.info(mvcConfigLocation);
-		InputStream inputStream = this.getServletContext().getResourceAsStream(
-				mvcConfigLocation);
-
-		p = new Properties();
-
-		try {
-			p.load(inputStream);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+		
+		p = (Properties) this.getServletContext().getAttribute(ContextLoaderListener.BASE_CONFIG_PROPERTIES);
+		
+		Assert.isNull(p, "配置文件未配置！");
+		
 	}
 
 	/*

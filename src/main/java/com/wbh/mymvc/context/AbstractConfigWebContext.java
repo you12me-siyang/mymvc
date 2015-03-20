@@ -12,18 +12,18 @@ import com.wbh.mymvc.resolver.ConfiguredBeanResolver;
 public abstract class AbstractConfigWebContext implements
 		ConfigurableWebContext {
 
-	private ServletContext servletContext;
+	protected ServletContext servletContext;
 
-	private DefaultBeanFactory beanFactory;
+	protected DefaultBeanFactory beanFactory;
 
-	private List<ConfiguredBeanResolver> cbrs;
+	protected List<ConfiguredBeanResolver> cbrs;
 
 	protected final void refreshBeanFactory() {
 		beanFactory = new DefaultBeanFactory();
 		loadBeanDefinitions(beanFactory);
 	}
 
-	private void loadBeanDefinitions(DefaultBeanFactory beanFactory) {
+	protected  void loadBeanDefinitions(DefaultBeanFactory beanFactory) {
 
 		if (null != cbrs && !cbrs.isEmpty()) {
 			for (ConfiguredBeanResolver cbr : cbrs) {

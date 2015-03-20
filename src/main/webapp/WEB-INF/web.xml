@@ -16,10 +16,6 @@
 	<servlet>
 		<servlet-name>dispatcher</servlet-name>
 		<servlet-class>com.wbh.mymvc.servlet.MyDispatcherServlet</servlet-class>
-		<init-param>
-			<param-name>mvcConfigLocation</param-name>
-			<param-value>/WEB-INF/classes/mymvc.properties</param-value>
-		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	<servlet-mapping>

@@ -18,6 +18,8 @@ public class ContextLoaderListener implements ServletContextListener {
 
 	public static final String CONTEXTCONFIGLOCATION = "contextConfigLocation";
 	public static final String WEBCONTEXT = "webContext";
+	public static final String CLASS_WEBCONTEXTINITIALIZER = "class.webcontextinitializer";
+	public static final String BASE_CONFIG_PROPERTIES = "baseConfigProperties";
 	public static final String CLASS_CONTEXTCLASS = "class.contextclass";
 	public static final String CLASS_RESOLVER = "class.resolver";
 
@@ -44,6 +46,7 @@ public class ContextLoaderListener implements ServletContextListener {
 		try {
 			p.load(inputStream);
 			inputStream.close();
+			sc.setAttribute(BASE_CONFIG_PROPERTIES, p);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -63,7 +66,34 @@ public class ContextLoaderListener implements ServletContextListener {
 		List<ConfiguredBeanResolver> cbrs = loadBeanResolvers(servletContext);
 		cwc.setConfiguredBeanResolver(cbrs);
 		cwc.setServletContext(servletContext);
+		initWebContextBeforeRefresh(servletContext,cwc);
 		cwc.refresh();
+	}
+
+	private void initWebContextBeforeRefresh(ServletContext servletContext,
+			ConfigurableWebContext cwc) {
+		String webContextInitializerClassValue = p.getProperty(CLASS_WEBCONTEXTINITIALIZER).trim();
+		if(null == webContextInitializerClassValue || ("").equals(webContextInitializerClassValue)){
+			return;
+		}
+		
+		String[] webContextInitializerClazz = webContextInitializerClassValue.split(",");
+
+		for (String className : webContextInitializerClazz) {
+			if (("").equals(className.trim())) {
+				continue;
+			} else {
+				doWebContextInit(cwc,className);
+			}
+		}
+	}
+
+	private void doWebContextInit(ConfigurableWebContext cwc, String className) {
+		
+		@SuppressWarnings("unchecked")
+		WebContextInitializer<ConfigurableWebContext> wci = (WebContextInitializer<ConfigurableWebContext>) ReflectUtil.newinstance(className, new Object[]{});
+		wci.initWebContext(cwc);
+		
 	}
 
 	private ConfigurableWebContext createWebApplicationContext(

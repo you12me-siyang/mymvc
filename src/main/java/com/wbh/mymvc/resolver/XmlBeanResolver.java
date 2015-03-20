@@ -12,15 +12,15 @@ import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.SAXException;
 
 import com.wbh.mymvc.bean.BeanDefinition;
-import com.wbh.mymvc.factory.support.DefaultBeanFactory;
+import com.wbh.mymvc.factory.support.AbstractBeanFactory;
 import com.wbh.mymvc.util.XmlBeanReader;
 
-public class XmlBeanResolver extends FileConfiguredBeanResolver {
+public class XmlBeanResolver extends AbstractFileConfiguredBeanResolver {
 
 	public static final String RESOLVER_FILE_XML = "xmlbeanresolver.file";
 
 	@Override
-	public void fillWithBeanDefinition(DefaultBeanFactory beanFactory,
+	public void fillWithBeanDefinition(AbstractBeanFactory beanFactory,
 			ServletContext servletContext) {
 		for (BeanDefinition bd : getBeanDefinitionsFromFile(servletContext)) {
 			beanFactory.addBeanDefinition(bd);

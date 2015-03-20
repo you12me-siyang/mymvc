@@ -34,29 +34,29 @@ public class XmlBeanReader extends DefaultHandler {
 			Class<?> c = null;
 			preTag = qName; // 记录标识，用来区分相同节点的不同父节点
 			beanDefinition = new BeanDefinition();
-			beanDefinition.setBeanName(attributes.getValue("name"));
+			beanDefinition.setBeanName(attributes.getValue("name").trim());
 			try {
-				c = Class.forName(attributes.getValue("class"));
+				c = Class.forName(attributes.getValue("class").trim());
 			} catch (ClassNotFoundException e1) {
 				e1.printStackTrace();
 			}
 			beanDefinition.setBeanClass(c);
 			if (null != attributes.getValue("isLazyInit")
-					&& !("").equals(attributes.getValue("isLazyInit"))) {
+					&& !("").equals(attributes.getValue("isLazyInit").trim())) {
 				beanDefinition.setLazyInit(Boolean.parseBoolean(attributes
 						.getValue("isLazyInit")));
 			} else {
 				beanDefinition.setLazyInit(true);
 			}
 			if (null != attributes.getValue("isNeedCache")
-					&& !("").equals(attributes.getValue("isNeedCache"))) {
+					&& !("").equals(attributes.getValue("isNeedCache").trim())) {
 				beanDefinition.setNeedCache(Boolean.parseBoolean(attributes
 						.getValue("isNeedCache")));
 			} else {
 				beanDefinition.setNeedCache(true);
 			}
 			if (null != attributes.getValue("initMethod")
-					&& !("").equals(attributes.getValue("initMethod"))) {
+					&& !("").equals(attributes.getValue("initMethod").trim())) {
 				try {
 					beanDefinition.setInitMethod(c.getMethod(attributes
 							.getValue("initMethod")));
@@ -67,7 +67,7 @@ public class XmlBeanReader extends DefaultHandler {
 				}
 			}
 			if (null != attributes.getValue("destroyMethod")
-					&& !("").equals(attributes.getValue("destroyMethod"))) {
+					&& !("").equals(attributes.getValue("destroyMethod").trim())) {
 				try {
 					beanDefinition.setDestroyMethod(c.getMethod(attributes
 							.getValue("destroyMethod")));
@@ -82,7 +82,7 @@ public class XmlBeanReader extends DefaultHandler {
 			if (null != attributes.getValue("ref")
 					&& ("true").equals(attributes.getValue("ref"))) {
 				beanDefinition.getInjections().add(
-						new BeanDefinition(attributes.getValue("name")));
+						new BeanDefinition(attributes.getValue("name").trim()));
 			}
 			if (null != attributes.getValue("value")
 					&& !("").equals(attributes.getValue("ref"))) {

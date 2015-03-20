@@ -7,11 +7,11 @@ import javax.servlet.ServletContext;
 import com.wbh.mymvc.bean.BeanDefinition;
 
 
-public abstract class FileConfiguredBeanResolver extends
+public abstract class AbstractFileConfiguredBeanResolver extends
 		AbstractConfiguredBeanResolver {
 	
 	
-	public abstract List<BeanDefinition> getBeanDefinitionsFromFile(ServletContext servletContext);
+	protected abstract List<BeanDefinition> getBeanDefinitionsFromFile(ServletContext servletContext);
 
 
 }

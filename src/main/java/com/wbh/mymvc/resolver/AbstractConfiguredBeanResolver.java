@@ -6,7 +6,7 @@ import java.util.Properties;
 public abstract class AbstractConfiguredBeanResolver implements
 		ConfiguredBeanResolver {
 
-	public Properties propertie;
+	protected Properties propertie;
 	
 	
 
