@@ -3,7 +3,8 @@ package com.wbh.mymvc.interceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.wbh.mymvc.ui.MyModelAndView;
+import com.wbh.mymvc.servlet.Handler;
+import com.wbh.mymvc.ui.RequestResult;
 
 /**
  * 基本的拦截器接口
@@ -16,11 +17,12 @@ public interface BaseInterceptor {
 	 * 先于获得handler
 	 * @param request
 	 * @param response
+	 * @param h 
 	 * @param handler
 	 * @return
 	 * @throws Exception
 	 */
-	boolean beforeHandler(HttpServletRequest request, HttpServletResponse response)
+	boolean beforeHandler(HttpServletRequest request, HttpServletResponse response, Handler h)
 		    throws Exception;
 	
 	/**
@@ -30,7 +32,7 @@ public interface BaseInterceptor {
 	 * @param handler
 	 * @throws Exception
 	 */
-	void afterHandler(HttpServletRequest request, HttpServletResponse response, MyModelAndView modelAndeView)
+	void afterHandler(HttpServletRequest request, HttpServletResponse response, RequestResult requestResult)
 		    throws Exception;
 	
 	/**
@@ -42,5 +44,6 @@ public interface BaseInterceptor {
 	 */
 	void afterViewLoad(HttpServletRequest request, HttpServletResponse response)
 		    throws Exception;
-	
+
+
 }

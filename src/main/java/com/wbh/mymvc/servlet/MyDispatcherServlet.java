@@ -22,7 +22,7 @@ import com.wbh.mymvc.context.ContextLoaderListener;
 import com.wbh.mymvc.context.DefaultWebContext;
 import com.wbh.mymvc.interceptor.BaseInterceptor;
 import com.wbh.mymvc.ui.Model;
-import com.wbh.mymvc.ui.MyModelAndView;
+import com.wbh.mymvc.ui.RequestResult;
 import com.wbh.mymvc.util.Assert;
 import com.wbh.mymvc.util.ComparatorObstructUtil;
 
@@ -171,7 +171,7 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private void doService(HttpServletRequest req, HttpServletResponse resp) {
 
 		Handler h = getHandler(req, resp);
-		MyModelAndView mv = new MyModelAndView();
+		RequestResult rr = new RequestResult();
 
 		if (null == h) { // url已被mapping才进行拦截否则直接返回
 			return;
@@ -184,19 +184,19 @@ public class MyDispatcherServlet extends MyBaseServlet {
 		 * springMVC会调用afterCompletion方法，此时的afterCompletion和返回ture的
 		 * afterCompletion方法不同，这里以后再做细致分析，先这样好了。
 		 */
-		if (!doBeforeHandler(req, resp)) {
+		if (!doBeforeHandler(req, resp, h)) {
 			return;
 		}
 
-		mv = invokeMappedMethod(h, req, resp);
+		rr = invokeMappedMethod(h, req, resp);
 
-		doAfterHandler(req, resp, mv);
+		doAfterHandler(req, resp, rr);
 
-		if ((null == mv) || (("").equals(mv.getView()))) {
+		if ((null == rr) || (("").equals(rr.getView()))) {
 			return;
 		}
 
-		loadView(mv, req, resp);
+		loadView(rr, req, resp);
 
 		doAfterViewLoad(req, resp);
 
@@ -230,36 +230,33 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 			}
 		}
-
 	}
 
 	private void doAfterHandler(HttpServletRequest req,
-			HttpServletResponse resp, MyModelAndView mv) {
+			HttpServletResponse resp, RequestResult rr) {
 
 		// 降序
 		for (int i = matchObstruct.size() - 1; i >= 0; i--) {
 			Obstruct o = matchObstruct.get(i);
 			try {
 
-				o.getInterceptor().afterHandler(req, resp, mv);
+				o.getInterceptor().afterHandler(req, resp, rr);
 
 			} catch (Exception e) {
 
 				e.printStackTrace();
-
 			}
 		}
-
 	}
 
 	private boolean doBeforeHandler(HttpServletRequest req,
-			HttpServletResponse resp) {
+			HttpServletResponse resp, Handler h) {
 
 		for (Obstruct o : matchObstruct) {
 
 			try {
 
-				if (!o.getInterceptor().beforeHandler(req, resp)) {
+				if (!o.getInterceptor().beforeHandler(req, resp, h)) {
 					return false;
 				}
 
@@ -268,7 +265,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 				e.printStackTrace();
 
 			}
-
 		}
 
 		return true;
@@ -288,20 +284,21 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	}
 
 	/**
-	 * 执行映射方法返回MyModelAndView对象
+	 * 执行映射方法返回RequestResult对象
 	 * 
 	 * @param h
 	 * @param req
 	 * @param resp
 	 * @return
 	 */
-	private MyModelAndView invokeMappedMethod(Handler h,
+	private RequestResult invokeMappedMethod(Handler h,
 			HttpServletRequest req, HttpServletResponse resp) {
-		Model model = new Model();
 		Method m = h.getMappingMethod();
 		try {
-			return (MyModelAndView) m.invoke(h.getController(), new Object[] {
-					model, req, resp });
+			
+			return (RequestResult) m.invoke(
+					h.getController(), 
+					h.getMethodParameter());
 		} catch (IllegalAccessException e1) {
 			e1.printStackTrace();
 			return null;
@@ -316,18 +313,17 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 	/**
 	 * 加载页面
-	 * 
 	 * @param mv
 	 * @param req
 	 * @param resp
 	 */
-	private void loadView(MyModelAndView mv, HttpServletRequest req,
+	private void loadView(RequestResult rr, HttpServletRequest req,
 			HttpServletResponse resp) {
-		Model m = mv.getModel();
-		for (String s : mv.getModel().keySet()) {
+		Model m = rr.getModel();
+		for (String s : rr.getModel().keySet()) {
 			req.setAttribute(s, m.get(s));
 		}
-		String viewName = mv.getView().trim();
+		String viewName = rr.getView().trim();
 		String viewFileName = viewPath + viewName + ".jsp";
 		try {
 			this.getServletContext().getRequestDispatcher(viewFileName)

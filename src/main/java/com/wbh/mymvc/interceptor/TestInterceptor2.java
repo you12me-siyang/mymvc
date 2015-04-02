@@ -5,7 +5,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.wbh.mymvc.annotation.Bean;
 import com.wbh.mymvc.annotation.MyInterceptor;
-import com.wbh.mymvc.ui.MyModelAndView;
+import com.wbh.mymvc.servlet.Handler;
+import com.wbh.mymvc.ui.RequestResult;
 
 @Bean
 @MyInterceptor(index = 2,mappingPath={"/member/*"})
@@ -13,17 +14,17 @@ public class TestInterceptor2 extends InterceptorAdapt {
 	
 	@Override
 	public boolean beforeHandler(HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
+			HttpServletResponse response, Handler h) throws Exception {
 		
 		System.out.println("===============TestInterceptor2:beforeHandler=================");
-		return super.beforeHandler(request, response);
+		return super.beforeHandler(request, response ,h);
 	}
 	
 	@Override
 	public void afterHandler(HttpServletRequest request,
-			HttpServletResponse response, MyModelAndView myModelAndView) throws Exception {
+			HttpServletResponse response, RequestResult requestResult) throws Exception {
 		System.out.println("===============TestInterceptor2:afterHandler=================");
-		super.afterHandler(request, response, myModelAndView);
+		super.afterHandler(request, response, requestResult);
 	}
 	
 	@Override

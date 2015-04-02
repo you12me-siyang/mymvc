@@ -8,6 +8,7 @@ public class Handler {
 	private Object controller;
 	private Method mappingMethod;
 	private String requestMethod;
+	private Object[] methodParameter;
 	
 	public Handler(Object controller,Method mappingMethod,String requestMethod) {
 		this.controller = controller;
@@ -37,4 +38,13 @@ public class Handler {
 		this.requestMethod = requestMethod;
 	}
 
+	public Object[] getMethodParameter() {
+		return methodParameter;
+	}
+
+	public void setMethodParameter(Object[] methodParameter) {
+		this.methodParameter = methodParameter;
+	}
+
+	
 }

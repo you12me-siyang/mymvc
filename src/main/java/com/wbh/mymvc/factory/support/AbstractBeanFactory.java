@@ -103,6 +103,7 @@ public abstract class AbstractBeanFactory implements WebContextBeanFactory {
 		Field[] fs = c.getDeclaredFields();// 包括私有变量
 
 		try {
+			
 			o = c.newInstance(); // 无参构造函数
 
 			// 调用自定义初始化方法
