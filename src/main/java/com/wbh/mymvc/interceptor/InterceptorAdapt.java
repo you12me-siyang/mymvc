@@ -3,6 +3,9 @@ package com.wbh.mymvc.interceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.wbh.mymvc.servlet.Handler;
 import com.wbh.mymvc.ui.RequestResult;
 
@@ -12,6 +15,14 @@ import com.wbh.mymvc.ui.RequestResult;
  *
  */
 public abstract class InterceptorAdapt implements BaseInterceptor {
+	
+	protected String interceptorMessage;
+	protected final Log logger = LogFactory.getLog(getClass());
+	
+	
+	@Override
+	public void init() {
+	}
 	
 	@Override
 	public boolean beforeHandler(HttpServletRequest request,

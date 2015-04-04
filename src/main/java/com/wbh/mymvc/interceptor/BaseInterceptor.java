@@ -13,6 +13,8 @@ import com.wbh.mymvc.ui.RequestResult;
  */
 public interface BaseInterceptor {
 	
+	void init();
+	
 	/**
 	 * 先于获得handler
 	 * @param request

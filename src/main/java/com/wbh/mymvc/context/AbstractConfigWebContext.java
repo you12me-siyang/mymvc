@@ -58,6 +58,10 @@ public abstract class AbstractConfigWebContext implements
 	public List<BeanBody> getBeanBodysByAnnotation(Class<? extends Annotation> c) {
 		return beanFactory.getBeanBodysByAnnotation(c);
 	}
+	@Override
+	public List<Object> getBeanByClass(Class<?> c) {
+		return beanFactory.getBeanByClass(c);
+	}
 
 	@Override
 	public void removeAllBeanInstantiation() {

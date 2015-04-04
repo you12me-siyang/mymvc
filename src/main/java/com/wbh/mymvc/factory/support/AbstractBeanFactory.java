@@ -86,6 +86,17 @@ public abstract class AbstractBeanFactory implements WebContextBeanFactory {
 		}
 	}
 
+	@Override
+	public List<Object> getBeanByClass(Class<?> c) {
+		List<Object> os = new ArrayList<Object>();
+		for (BeanDefinition bd : beanDefinitionMap.values()) {
+			if(c.isAssignableFrom(bd.getBeanClass())){
+				os.add(getBean(bd.getBeanName()));
+			}
+		}
+		return os;
+	}
+	
 	public void initBeanInstantiationMap() {
 		for (BeanDefinition bd : beanDefinitionMap.values()) {
 			if ((!bd.isLazyInit()) && bd.isNeedCache()) {

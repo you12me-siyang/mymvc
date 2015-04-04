@@ -1,30 +1,28 @@
 package com.wbh.mymvc.util;
 
-import java.lang.reflect.Field;
 import java.util.Map;
+
+import com.wbh.mymvc.dataobj.FieldBody;
+import com.wbh.mymvc.dataobj.Parameter;
 
 public class RequestParameterUtil {
 	
-	public static Object parameterToEntity(Map<String,String[]> m,Object o){
+	public static void parameterToEntity(Map<String,String[]> m,Parameter p){
 		
-		Class<?> c = o.getClass();
-		Field f = null;
+		Class<?> c = p.getParameterClass();
+		FieldBody f = null;
 		for(String str:m.keySet()){
 			try {
-				f = c.getDeclaredField(str);
-				f.setAccessible(true);
-				f.set(o, m.get(str)[0]);
+				f= new FieldBody(c.getDeclaredField(str),p.getParameterValue());
+				f.setValue(m.get(str)[0]);
 			} catch (NoSuchFieldException e) {
-				return null;
+				e.printStackTrace();
 			} catch (SecurityException e) {
 				e.printStackTrace();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			}
+			} 
 		}
-		return o;
 	}
 
 }
