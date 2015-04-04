@@ -1,4 +1,4 @@
-package com.wbh.mymvc.annotation.validator;
+package com.wbh.mymvc.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -11,6 +11,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface Validator{
+public @interface Parameter{
 	
+	String value() ;
+
 }

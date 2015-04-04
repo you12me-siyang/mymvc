@@ -3,7 +3,7 @@ package com.wbh.mymvc.ui;
 public class RequestResult {
 	
 	private String view;
-	private Model model = new Model();
+	private Model model;
 	private Object resultEntity;
 	private int resultCode;
 	private String message;
