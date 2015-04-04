@@ -1,4 +1,4 @@
-package com.wbh.mymvc.controller;
+package com.wbh.mymvc.validator;
 
 import com.wbh.mymvc.annotation.Bean;
 import com.wbh.mymvc.annotation.validator.InLengthRange;
