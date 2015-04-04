@@ -273,7 +273,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 	/**
 	 * 获得映射到的控制器
-	 * 
 	 * @param req
 	 * @param resp
 	 * @return
@@ -285,7 +284,6 @@ public class MyDispatcherServlet extends MyBaseServlet {
 
 	/**
 	 * 执行映射方法返回RequestResult对象
-	 * 
 	 * @param h
 	 * @param req
 	 * @param resp
@@ -294,11 +292,12 @@ public class MyDispatcherServlet extends MyBaseServlet {
 	private RequestResult invokeMappedMethod(Handler h,
 			HttpServletRequest req, HttpServletResponse resp) {
 		Method m = h.getMappingMethod();
+		Object[] os = h.getParameterValues();
 		try {
 			
 			return (RequestResult) m.invoke(
 					h.getController(), 
-					h.getMethodParameter());
+					os);
 		} catch (IllegalAccessException e1) {
 			e1.printStackTrace();
 			return null;
